@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pixel Runner</title>
+  <style>
+    body {
+      margin: 0;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      font-family: 'Courier New', monospace;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas {
+      background: linear-gradient(#eee 50%, #666 50%);
+      border: 2px solid #333;
+      display: block;
+      width: 100%; /* full màn hình */
+      max-width: 800px; /* không quá to */
+      height: auto;
+    }
+    #jumpButton, #restartButton {
+      position: fixed;
+      bottom: 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 30px;
+      font-size: 22px;
+      cursor: pointer;
+      z-index: 10;
+    }
+    #jumpButton { right: 20px; }
+    #restartButton { display: none; left: 20px; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <button id="jumpButton">Jump</button>
+  <button id="restartButton">Chơi lại</button>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let dino, car, gravity, gameOver;
+
+    function init() {
+      dino = { x: 50, y: 300, width: 40, height: 40, dy: 0, jumping: false };
+      car = { x: 800, y: 320, width: 60, height: 30, speed: 6 };
+      gravity = 0.8;
+      gameOver = false;
+      document.getElementById("restartButton").style.display = "none";
+      requestAnimationFrame(update);
+    }
+
+    function jump() {
+      if (!dino.jumping && !gameOver) {
+        dino.dy = -12;
+        dino.jumping = true;
+      }
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Mặt đất
+      ctx.fillStyle = "#444";
+      ctx.fillRect(0, 350, canvas.width, 50);
+
+      // Nhân vật
+      ctx.fillStyle = "black";
+      ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+
+      // Xe
+      ctx.fillStyle = "red";
+      ctx.fillRect(car.x, car.y, car.width, car.height);
+
+      // Di chuyển xe
+      car.x -= car.speed;
+      if (car.x + car.width < 0) {
+        car.x = 800 + Math.random() * 300;
+      }
+
+      // Trọng lực
+      dino.y += dino.dy;
+      if (dino.y < 300) {
+        dino.dy += gravity;
+      } else {
+        dino.y = 300;
+        dino.dy = 0;
+        dino.jumping = false;
+      }
+
+      // Va chạm
+      if (
+        dino.x < car.x + car.width &&
+        dino.x + dino.width > car.x &&
+        dino.y + dino.height > car.y
+      ) {
+        ctx.font = "48px Arial";
+        ctx.fillStyle = "red";
+        ctx.fillText("GAME OVER", 260, 200);
+        document.getElementById("restartButton").style.display = "block";
+        gameOver = true;
+        return;
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    // Bàn phím
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
+    });
+
+    // Nút bấm
+    document.getElementById("jumpButton").addEventListener("click", jump);
+    document.getElementById("restartButton").addEventListener("click", init);
+
+    // Chạm vào canvas cũng nhảy
+    canvas.addEventListener("touchstart", jump);
+
+    // Khởi động game
+    init();
+  </script>
+</body>
+</html>
